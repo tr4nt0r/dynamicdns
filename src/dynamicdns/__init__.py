@@ -5,7 +5,7 @@
 from .providers import Provider, ProviderConf, providers
 from .updater import Updater
 
-__version__ = "0.0.1"
+__version__ = "0.1.0rc0"
 __all__ = [
     "providers",
     "Provider",
