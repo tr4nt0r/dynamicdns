@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-regex-commit"]
 build-backend = "hatchling.build"
 
 [project]
@@ -32,6 +32,7 @@ Issues = "https://github.com/tr4nt0r/dynamicdns/issues"
 Source = "https://github.com/tr4nt0r/dynamicdns"
 
 [tool.hatch.version]
+source = "regex_commit"
 path = "src/dynamicdns/__init__.py"
 
 [tool.hatch.envs.default]
