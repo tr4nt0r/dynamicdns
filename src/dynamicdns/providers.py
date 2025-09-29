@@ -9,7 +9,15 @@ from typing import Callable
 import voluptuous as vol
 from yarl import URL
 
-from .const import CONF_DOMAIN, CONF_HOST, CONF_IP_ADDRESS, CONF_IPV6_ADDRESS, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
+from .const import (
+    CONF_DOMAIN,
+    CONF_HOST,
+    CONF_IP_ADDRESS,
+    CONF_IPV6_ADDRESS,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_USERNAME,
+)
 
 
 class Provider(StrEnum):
@@ -20,6 +28,7 @@ class Provider(StrEnum):
     ANYDNS = "anydns"
     FREEDNS = "freedns"
     FREEDNS_IPV6 = "freedns_ipv6"
+    NAMECHEAP = "namecheap"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -69,13 +78,19 @@ providers: dict[Provider, ProviderConf] = {
                 vol.Required(CONF_DOMAIN): str,
                 vol.Required(CONF_USERNAME): str,
                 vol.Required(CONF_PASSWORD): str,
-            },
+            }
         ),
     ),
     Provider.ANYDNS: ProviderConf(
         name="AnyDNS.info",
         base_url="https://anydns.info/update.php",
-        params={"host": CONF_HOST, "user": CONF_USERNAME, "password": CONF_PASSWORD},
+        params={
+            "host": CONF_HOST,
+            "user": CONF_USERNAME,
+            "password": CONF_PASSWORD,
+            "ip": CONF_IP_ADDRESS,
+            "ip6": CONF_IPV6_ADDRESS,
+        },
         schema=vol.Schema(
             {
                 vol.Required(CONF_HOST): str,
@@ -87,13 +102,35 @@ providers: dict[Provider, ProviderConf] = {
     Provider.FREEDNS: ProviderConf(
         name="FreeDNS IPv4",
         base_url="https://sync.afraid.org/u/{token}/",
+        params={"address": CONF_IP_ADDRESS},
         schema=vol.Schema({vol.Required(CONF_TOKEN): str}),
         success_fn=lambda x: x.startswith(("Updated", "No IP change")),
     ),
     Provider.FREEDNS_IPV6: ProviderConf(
         name="FreeDNS IPv6",
         base_url="https://v6.sync.afraid.org/u/{token}",
+        params={"address": CONF_IPV6_ADDRESS},
         schema=vol.Schema({vol.Required(CONF_TOKEN): str}),
         success_fn=lambda x: x.startswith(("Updated", "No IP change")),
+    ),
+    Provider.NAMECHEAP: ProviderConf(
+        name="Namecheap",
+        base_url=(
+            "https://dynamicdns.park-your-domain.com/update?host={host}&domain={domain}"
+            "&password={password}&ip={ip_address}"
+        ),
+        params={
+            "host": CONF_HOST,
+            "domain": CONF_DOMAIN,
+            "password": CONF_PASSWORD,
+            "ip": CONF_IP_ADDRESS,
+        },
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_HOST, default="@"): str,
+                vol.Required(CONF_DOMAIN): str,
+                vol.Required(CONF_PASSWORD): str,
+            }
+        ),
     ),
 }
