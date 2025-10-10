@@ -2,12 +2,12 @@
 #
 # SPDX-License-Identifier: MIT
 
-from .providers import Provider, ProviderConf, providers
+from .providers import Provider, ProviderConf, PROVIDERS
 from .updater import Updater
 
 __version__ = "0.1.0rc0"
 __all__ = [
-    "providers",
+    "PROVIDERS",
     "Provider",
     "ProviderConf",
     "Updater",
