@@ -6,7 +6,7 @@ import logging
 
 from aiohttp import ClientSession
 
-from .providers import Provider, providers
+from .providers import Provider, PROVIDERS
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -23,15 +23,16 @@ class Updater:
         """Initialize."""
 
         self.session = session
-        self.method = providers[provider].method
-        self.url = providers[provider].render_url(data)
-        self.success = providers[provider].success_fn
+        self.provider = provider
+        self.method = PROVIDERS[provider].method
+        self.url = PROVIDERS[provider].render_url(data)
+        self.success = PROVIDERS[provider].success_fn
 
     async def update(self) -> bool:
         """Update the dynamic DNS record."""
 
         async with self.session.request(self.method, self.url) as res:
-            _LOGGER.debug(await res.text())
+            _LOGGER.debug("[%s]: %s", self.provider.name, await res.text())
             return (
                 self.success(await res.text()) if self.success is not None else res.ok
             )

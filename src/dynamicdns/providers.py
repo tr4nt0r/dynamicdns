@@ -16,6 +16,7 @@ from .const import (
     CONF_IPV6_ADDRESS,
     CONF_PASSWORD,
     CONF_TOKEN,
+    CONF_URL,
     CONF_USERNAME,
 )
 
@@ -23,12 +24,14 @@ from .const import (
 class Provider(StrEnum):
     """Dynamic DNS providers."""
 
-    DUCKDNS = "duckdns"
-    MYTHICBEASTS_IPV4 = "mythicbeasts_ipv4"
     ANYDNS = "anydns"
+    DUCKDNS = "duckdns"
     FREEDNS = "freedns"
     FREEDNS_IPV6 = "freedns_ipv6"
+    MYTHICBEASTS = "mythicbeasts"
     NAMECHEAP = "namecheap"
+    NO_IP = "no_ip"
+    CUSTOM = "custom"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -44,13 +47,16 @@ class ProviderConf:
 
     def render_url(self, data: dict[str, str]) -> URL:
         """Render the provider URL with given data and remove unused query parameters."""
-
-        url = URL(self.base_url)
+        url = URL(data.get(CONF_URL) or self.base_url)
         url = url.with_path(url.path.format(**data))
+        if url.user:
+            url = url.with_user(url.user.format(**data))
+        if url.password:
+            url = url.with_password(url.password.format(**data))
         return url % {k: data[v] for k, v in self.params.items() if v in data}
 
 
-providers: dict[Provider, ProviderConf] = {
+PROVIDERS: dict[Provider, ProviderConf] = {
     Provider.DUCKDNS: ProviderConf(
         name="Duck DNS",
         base_url="https://www.duckdns.org/update?verbose=true",
@@ -68,8 +74,8 @@ providers: dict[Provider, ProviderConf] = {
         ),
         success_fn=lambda x: x.startswith("OK"),
     ),
-    Provider.MYTHICBEASTS_IPV4: ProviderConf(
-        name="Mythic Beasts IPv4",
+    Provider.MYTHICBEASTS: ProviderConf(
+        name="Mythic Beasts",
         base_url="https://ipv4.api.mythic-beasts.com/dns/v2/dynamic/{domain}",
         method="POST",
         params={"username": CONF_USERNAME, "password": CONF_PASSWORD},
@@ -85,7 +91,7 @@ providers: dict[Provider, ProviderConf] = {
         name="AnyDNS.info",
         base_url="https://anydns.info/update.php",
         params={
-            "host": CONF_HOST,
+            "host": CONF_DOMAIN,
             "user": CONF_USERNAME,
             "password": CONF_PASSWORD,
             "ip": CONF_IP_ADDRESS,
@@ -93,14 +99,14 @@ providers: dict[Provider, ProviderConf] = {
         },
         schema=vol.Schema(
             {
-                vol.Required(CONF_HOST): str,
+                vol.Required(CONF_DOMAIN): str,
                 vol.Required(CONF_USERNAME): str,
                 vol.Required(CONF_PASSWORD): str,
             },
         ),
     ),
     Provider.FREEDNS: ProviderConf(
-        name="FreeDNS IPv4",
+        name="FreeDNS",
         base_url="https://sync.afraid.org/u/{token}/",
         params={"address": CONF_IP_ADDRESS},
         schema=vol.Schema({vol.Required(CONF_TOKEN): str}),
@@ -132,5 +138,31 @@ providers: dict[Provider, ProviderConf] = {
                 vol.Required(CONF_PASSWORD): str,
             }
         ),
+        success_fn=lambda x: "<ErrCount>0</ErrCount>" in x,
+    ),
+    Provider.NO_IP: ProviderConf(
+        name="NO-IP.com",
+        base_url="https://{username}:{password}@dynupdate.no-ip.com/nic/update",
+        params={
+            "hostname": CONF_DOMAIN,
+            "myip": CONF_IP_ADDRESS,
+        },
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_DOMAIN, default="all.ddnskey.com"): str,
+                vol.Required(CONF_USERNAME): str,
+                vol.Required(CONF_PASSWORD): str,
+            }
+        ),
+        success_fn=lambda x: x.startswith(("good", "nochg")),
+    ),
+    Provider.CUSTOM: ProviderConf(
+        name="Custom dynamic DNS",
+        base_url="{url}",
+        params={
+            "ip": CONF_IP_ADDRESS,
+            "ipv6": CONF_IPV6_ADDRESS,
+        },
+        schema=vol.Schema({vol.Required(CONF_URL): str}),
     ),
 }
