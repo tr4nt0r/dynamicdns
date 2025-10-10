@@ -2,7 +2,6 @@
 
 from typing import Final
 
-CONF_HOSTS: Final = "hosts"
 CONF_HOST: Final = "host"
 CONF_TOKEN: Final = "token"
 CONF_USERNAME: Final = "username"
@@ -13,3 +12,4 @@ CONF_VERBOSE: Final = "verbose"
 CONF_TXT: Final = "txt"
 CONF_CLEAR: Final = "clear"
 CONF_DOMAIN: Final = "domain"
+CONF_URL: Final = "url"

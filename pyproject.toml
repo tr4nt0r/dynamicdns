@@ -86,3 +86,7 @@ convention = "numpy"
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
+
+[tool.hatch.envs.hatch-static-analysis]
+config-path = "none"
+dependencies = ["ruff==0.13.2"]

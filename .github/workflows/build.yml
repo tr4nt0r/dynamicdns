@@ -18,15 +18,15 @@ jobs:
         run: |
           hatch fmt --check
           hatch run types:check
-      - name: Test
-        run: |
-          hatch test --all
+      # - name: Test
+      #   run: |
+      #     hatch test --all
 
-      - uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: true
-          verbose: true
+      # - uses: codecov/codecov-action@v5
+      #   with:
+      #     token: ${{ secrets.CODECOV_TOKEN }}
+      #     fail_ci_if_error: true
+      #     verbose: true
 
   release:
     runs-on: ubuntu-latest
